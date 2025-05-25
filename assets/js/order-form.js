@@ -264,9 +264,10 @@ jQuery(document).ready(function($) {
         }
 
         const phone = $('#phone').val().replace(/[^0-9]/g, '');
-        if (phone.length !== 10) {
+        // Check if phone starts with 0 or has less/more than 10 digits
+        if (phone.length !== 10 || phone.startsWith('0')) {
             e.preventDefault();
-            alert('Please enter a valid 10-digit phone number.');
+            alert('Please enter a valid 10-digit phone number without any leading zeros or country code.');
             $('#phone').focus();
             return;
         }
@@ -274,6 +275,16 @@ jQuery(document).ready(function($) {
 
     // Phone number validation
     $('#phone').on('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+        let value = this.value.replace(/[^0-9]/g, '');
+        
+        // Remove leading zeros
+        while (value.length > 0 && value.charAt(0) === '0') {
+            value = value.substring(1);
+        }
+        
+        // Take only first 10 digits
+        value = value.slice(0, 10);
+        
+        this.value = value;
     });
 }); 

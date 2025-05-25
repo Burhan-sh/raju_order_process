@@ -50,10 +50,10 @@ class RJ_Admin_Order_Form {
     private function validate_form_data($data) {
         $errors = array();
 
-        // Validate phone number (10 digits only)
+        // Validate phone number (10 digits only, no leading zeros)
         $phone = preg_replace('/[^0-9]/', '', $data['phone']);
-        if (strlen($phone) !== 10) {
-            $errors[] = __('Phone number must be exactly 10 digits.', 'rj-admin-order');
+        if (strlen($phone) !== 10 || $phone[0] === '0') {
+            $errors[] = __('Phone number must be exactly 10 digits without any leading zeros or country code.', 'rj-admin-order');
         }
 
         // Required fields
