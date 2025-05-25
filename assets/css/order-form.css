@@ -347,24 +347,38 @@
 .rj-admin-order-success {
     background-color: #d4edda;
     color: #155724;
-    padding: 15px;
-    margin-bottom: 20px;
+    padding: 30px;
+    margin: 20px 0;
     border: 1px solid #c3e6cb;
-    border-radius: 4px;
+    border-radius: 5px;
+    text-align: center;
 }
 
-.rj-admin-order-success a.button {
+.rj-admin-order-success h3 {
+    margin: 0 0 15px;
+    color: #155724;
+    font-size: 24px;
+}
+
+.rj-admin-order-success p {
+    margin: 0 0 20px;
+    font-size: 16px;
+}
+
+.rj-admin-order-success .button {
     display: inline-block;
-    margin-left: 10px;
-    padding: 5px 15px;
+    padding: 10px 20px;
     background: #28a745;
     color: #fff;
     text-decoration: none;
     border-radius: 4px;
     border: 1px solid #218838;
+    font-size: 16px;
+    transition: all 0.3s ease;
 }
 
-.rj-admin-order-success a.button:hover {
+.rj-admin-order-success .button:hover {
     background: #218838;
     border-color: #1e7e34;
+    color: #fff;
 } 

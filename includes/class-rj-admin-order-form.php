@@ -37,12 +37,7 @@ class RJ_Admin_Order_Form {
         try {
             $order_id = $this->create_order($_POST);
             if ($order_id) {
-                $_SESSION['rj_admin_order_success'] = sprintf(
-                    __('Order #%d has been successfully placed! <a href="%s" class="button button-primary">Place New Order</a>', 'rj-admin-order'),
-                    $order_id,
-                    esc_url(remove_query_arg('order_success', $_SERVER['HTTP_REFERER']))
-                );
-                wp_redirect(add_query_arg('order_success', '1', $_SERVER['HTTP_REFERER']));
+                wp_redirect(add_query_arg('order_success', $order_id, $_SERVER['HTTP_REFERER']));
                 exit;
             }
         } catch (Exception $e) {
