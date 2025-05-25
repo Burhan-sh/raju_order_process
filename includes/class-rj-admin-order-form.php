@@ -2,6 +2,13 @@
 class RJ_Admin_Order_Form {
     public function __construct() {
         add_action('init', array($this, 'handle_form_submission'));
+        add_action('init', array($this, 'start_session'));
+    }
+
+    public function start_session() {
+        if (!session_id()) {
+            session_start();
+        }
     }
 
     public function handle_form_submission() {
@@ -30,7 +37,12 @@ class RJ_Admin_Order_Form {
         try {
             $order_id = $this->create_order($_POST);
             if ($order_id) {
-                wp_redirect(admin_url('post.php?post=' . $order_id . '&action=edit'));
+                $_SESSION['rj_admin_order_success'] = sprintf(
+                    __('Order #%d has been successfully placed! <a href="%s" class="button button-primary">Place New Order</a>', 'rj-admin-order'),
+                    $order_id,
+                    esc_url(remove_query_arg('order_success', $_SERVER['HTTP_REFERER']))
+                );
+                wp_redirect(add_query_arg('order_success', '1', $_SERVER['HTTP_REFERER']));
                 exit;
             }
         } catch (Exception $e) {
@@ -173,5 +185,23 @@ class RJ_Admin_Order_Form {
             session_start();
         }
         $_SESSION['rj_admin_order_errors'] = $errors;
+    }
+
+    public function get_success_message() {
+        if (isset($_SESSION['rj_admin_order_success'])) {
+            $message = $_SESSION['rj_admin_order_success'];
+            unset($_SESSION['rj_admin_order_success']);
+            return $message;
+        }
+        return '';
+    }
+
+    public function get_errors() {
+        if (isset($_SESSION['rj_admin_order_errors'])) {
+            $errors = $_SESSION['rj_admin_order_errors'];
+            unset($_SESSION['rj_admin_order_errors']);
+            return $errors;
+        }
+        return array();
     }
 } 

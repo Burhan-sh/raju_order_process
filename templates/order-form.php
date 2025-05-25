@@ -2,6 +2,8 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+global $rj_admin_order_form;
 ?>
 <div class="rj-admin-order-container">
     <div class="rj-admin-order-title">
@@ -9,19 +11,30 @@ if (!defined('ABSPATH')) {
     </div>
     
     <?php
+    // Display success message if any
+    if (isset($_GET['order_success'])) {
+        $success_message = $rj_admin_order_form->get_success_message();
+        if (!empty($success_message)) {
+            echo '<div class="rj-admin-order-success">';
+            echo wp_kses_post($success_message);
+            echo '</div>';
+        }
+    }
+
     // Display errors if any
-    if (isset($_SESSION['rj_admin_order_errors'])) {
+    $errors = $rj_admin_order_form->get_errors();
+    if (!empty($errors)) {
         echo '<div class="rj-admin-order-errors">';
         echo '<ul>';
-        foreach ($_SESSION['rj_admin_order_errors'] as $error) {
+        foreach ($errors as $error) {
             echo '<li>' . esc_html($error) . '</li>';
         }
         echo '</ul>';
         echo '</div>';
-        unset($_SESSION['rj_admin_order_errors']);
     }
     ?>
 
+    <?php if (!isset($_GET['order_success'])): ?>
     <div class="rj-admin-order-form-container">
         <form method="post" class="rj-admin-order-form">
             <?php wp_nonce_field('rj_admin_order_form', 'rj_admin_order_nonce'); ?>
@@ -159,4 +172,5 @@ if (!defined('ABSPATH')) {
             </div>
         </form>
     </div>
+    <?php endif; ?>
 </div> 
