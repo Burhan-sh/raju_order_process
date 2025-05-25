@@ -68,7 +68,7 @@ class RJ_Admin_Order_Form {
         }
 
         // Validate products
-        if (empty($data['products']) || !is_array($data['products'])) {
+        if (empty($data['products'])) {
             $errors[] = __('Please select at least one product.', 'rj-admin-order');
         }
 
@@ -90,15 +90,27 @@ class RJ_Admin_Order_Form {
         ));
 
         // Add products
-        foreach ($data['products'] as $product) {
-            $product_id = absint($product['id']);
-            $variation_id = isset($product['variation_id']) ? absint($product['variation_id']) : 0;
-            $quantity = absint($product['quantity']);
-            
-            if ($variation_id) {
-                $order->add_product(wc_get_product($variation_id), $quantity);
-            } else {
-                $order->add_product(wc_get_product($product_id), $quantity);
+        $products = array();
+        if (isset($data['products']) && is_array($data['products'])) {
+            foreach ($data['products'] as $product_json) {
+                $product_data = json_decode($product_json, true);
+                if (is_array($product_data)) {
+                    $products[] = $product_data;
+                }
+            }
+        }
+
+        if (!empty($products)) {
+            foreach ($products as $product) {
+                $product_id = absint($product['id']);
+                $variation_id = isset($product['variation_id']) ? absint($product['variation_id']) : 0;
+                $quantity = isset($product['quantity']) ? absint($product['quantity']) : 1;
+                
+                if ($variation_id) {
+                    $order->add_product(wc_get_product($variation_id), $quantity);
+                } else {
+                    $order->add_product(wc_get_product($product_id), $quantity);
+                }
             }
         }
 
