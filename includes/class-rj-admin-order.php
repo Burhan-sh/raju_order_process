@@ -2,11 +2,23 @@
 class RJ_Admin_Order {
     private $version;
     private $form;
+    private static $instance = null;
 
     public function __construct() {
         $this->version = RJ_ADMIN_ORDER_VERSION;
         $this->load_dependencies();
         $this->form = new RJ_Admin_Order_Form();
+    }
+
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    public function get_form() {
+        return $this->form;
     }
 
     private function load_dependencies() {
@@ -85,9 +97,6 @@ class RJ_Admin_Order {
             return __('You do not have permission to access this page.', 'rj-admin-order');
         }
 
-        // Make the form instance available to the template
-        $rj_admin_order_form = $this->form;
-        
         ob_start();
         include RJ_ADMIN_ORDER_PLUGIN_DIR . 'templates/order-form.php';
         return ob_get_clean();

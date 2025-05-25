@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-global $rj_admin_order_form;
+$rj_admin_order_form = RJ_Admin_Order::get_instance()->get_form();
 ?>
 <div class="rj-admin-order-container">
     <div class="rj-admin-order-title">

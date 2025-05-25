@@ -78,7 +78,7 @@ require_once RJ_ADMIN_ORDER_PLUGIN_DIR . 'includes/class-rj-admin-order.php';
 // Initialize the plugin
 function rj_admin_order_init() {
     if (rj_admin_order_check_woocommerce()) {
-        $plugin = new RJ_Admin_Order();
+        $plugin = RJ_Admin_Order::get_instance();
         $plugin->init();
     }
 }
