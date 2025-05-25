@@ -368,17 +368,32 @@
 .rj-admin-order-success .button {
     display: inline-block;
     padding: 10px 20px;
-    background: #28a745;
-    color: #fff;
     text-decoration: none;
     border-radius: 4px;
-    border: 1px solid #218838;
     font-size: 16px;
     transition: all 0.3s ease;
 }
 
-.rj-admin-order-success .button:hover {
+.rj-admin-order-success .button-primary {
+    background: #28a745;
+    color: #fff;
+    border: 1px solid #218838;
+}
+
+.rj-admin-order-success .button-primary:hover {
     background: #218838;
     border-color: #1e7e34;
     color: #fff;
+}
+
+.rj-admin-order-success .button-secondary {
+    background: #fff;
+    color: #28a745;
+    border: 1px solid #28a745;
+}
+
+.rj-admin-order-success .button-secondary:hover {
+    background: #f8f9fa;
+    color: #218838;
+    border-color: #218838;
 } 

@@ -1,6 +1,7 @@
 jQuery(document).ready(function($) {
     const productSearch = $('#rj-product-search');
     const selectedProducts = $('#rj-selected-products');
+    const orderItems = $('#rj-order-items');
     let searchTimeout;
     let searchResults;
 
@@ -60,34 +61,34 @@ jQuery(document).ready(function($) {
         }
 
         results.forEach(function(product) {
-            const item = $('<div class="rj-search-item"></div>');
-            
-            // Create product display with image if available
-            const productHtml = `
-                <div class="rj-search-item-content">
-                    ${product.image ? `<img src="${product.image}" alt="${product.text}" class="rj-product-image">` : ''}
-                    <div class="rj-product-details">
-                        <div class="rj-product-name">${product.text}</div>
-                        <div class="rj-product-price">₹${parseFloat(product.price).toFixed(2)}</div>
+            const resultItem = $(`
+                <div class="rj-search-item">
+                    <div class="rj-search-item-content">
+                        ${product.image ? `<img src="${product.image}" alt="${product.text}" class="rj-product-image">` : ''}
+                        <div class="rj-product-details">
+                            <div class="rj-product-name">${product.text}</div>
+                            <div class="rj-product-price">₹${parseFloat(product.price).toFixed(2)}</div>
+                        </div>
                     </div>
                 </div>
-            `;
-            
-            item.html(productHtml).data('product', product);
+            `);
 
-            // Handle click event
-            item.on('click', function() {
-                const productData = $(this).data('product');
-                if (productData.variations) {
-                    showVariationsModal(productData);
+            resultItem.on('click', function() {
+                if (product.type === 'variable' && product.variations) {
+                    showVariationsModal(product);
                 } else {
-                    addProduct(productData);
+                    addProduct({
+                        id: product.id,
+                        text: product.text,
+                        price: product.price,
+                        image: product.image
+                    });
                 }
-                productSearch.val('');
                 searchResults.hide();
+                productSearch.val('');
             });
 
-            searchResults.append(item);
+            searchResults.append(resultItem);
         });
 
         searchResults.show();
@@ -177,6 +178,9 @@ jQuery(document).ready(function($) {
             </div>
         `);
 
+        // Add to order items table
+        updateOrderItem(productId, product, 1);
+
         // Quantity change handler
         productItem.find('.rj-quantity-input').on('change', function() {
             const qty = parseInt($(this).val());
@@ -185,6 +189,7 @@ jQuery(document).ready(function($) {
                 return;
             }
             updateProductData(productItem, qty);
+            updateOrderItem(productId, product, qty);
             updateOrderSummary();
         });
 
@@ -192,6 +197,7 @@ jQuery(document).ready(function($) {
         productItem.find('.rj-remove-product').on('click', function() {
             productItem.fadeOut(300, function() {
                 $(this).remove();
+                $(`#order-item-${productId}`).remove();
                 updateOrderSummary();
             });
         });
@@ -200,7 +206,7 @@ jQuery(document).ready(function($) {
         updateOrderSummary();
     }
 
-    // Update product data
+    // Update product data in hidden input
     function updateProductData(productItem, quantity) {
         const hiddenInput = productItem.find('input[name="products[]"]');
         const data = JSON.parse(hiddenInput.val());
@@ -208,16 +214,38 @@ jQuery(document).ready(function($) {
         hiddenInput.val(JSON.stringify(data));
     }
 
+    // Update order item in the summary table
+    function updateOrderItem(productId, product, quantity) {
+        const price = parseFloat(product.price);
+        const total = price * quantity;
+        
+        let orderItem = $(`#order-item-${productId}`);
+        if (orderItem.length === 0) {
+            orderItem = $(`
+                <tr id="order-item-${productId}">
+                    <td>${product.text}</td>
+                    <td class="qty">${quantity}</td>
+                    <td class="price">₹${price.toFixed(2)}</td>
+                    <td class="total">₹${total.toFixed(2)}</td>
+                </tr>
+            `);
+            orderItems.append(orderItem);
+        } else {
+            orderItem.find('.qty').text(quantity);
+            orderItem.find('.total').text(`₹${total.toFixed(2)}`);
+        }
+    }
+
     // Update order summary
     function updateOrderSummary() {
         let subtotal = 0;
         
-        selectedProducts.find('.rj-product-item').each(function() {
-            const data = JSON.parse($(this).find('input[name="products[]"]').val());
-            subtotal += parseFloat(data.price) * parseInt(data.quantity);
+        orderItems.find('tr').each(function() {
+            const total = parseFloat($(this).find('.total').text().replace('₹', ''));
+            subtotal += total;
         });
 
-        $('#rj-order-subtotal, #rj-order-total').text('₹' + subtotal.toFixed(2));
+        $('#rj-order-subtotal, #rj-order-total').text(`₹${subtotal.toFixed(2)}`);
     }
 
     // Close search results when clicking outside

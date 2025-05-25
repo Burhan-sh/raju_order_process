@@ -88,43 +88,67 @@ class RJ_Admin_Order_Form {
     }
 
     private function create_order($data) {
+        global $woocommerce;
+
         // Check if user exists with phone number
         $user_id = $this->get_user_by_phone($data['phone']);
         
         // Create order
         $order = wc_create_order(array(
-            'customer_id' => $user_id
+            'customer_id' => $user_id,
+            'status' => 'processing'
         ));
+
+        if (!$order) {
+            throw new Exception(__('Failed to create order.', 'rj-admin-order'));
+        }
 
         // Add products
         $products = array();
+        $order_total = 0;
+
         if (isset($data['products']) && is_array($data['products'])) {
             foreach ($data['products'] as $product_json) {
-                $product_data = json_decode($product_json, true);
-                if (is_array($product_data)) {
-                    $products[] = $product_data;
+                $product_data = json_decode(stripslashes($product_json), true);
+                if (!is_array($product_data)) {
+                    continue;
                 }
-            }
-        }
 
-        if (!empty($products)) {
-            foreach ($products as $product) {
-                $product_id = absint($product['id']);
-                $variation_id = isset($product['variation_id']) ? absint($product['variation_id']) : 0;
-                $quantity = isset($product['quantity']) ? absint($product['quantity']) : 1;
+                $product_id = absint($product_data['id']);
+                $variation_id = isset($product_data['variation_id']) ? absint($product_data['variation_id']) : 0;
+                $quantity = isset($product_data['quantity']) ? absint($product_data['quantity']) : 1;
                 
-                if ($variation_id) {
-                    $product_obj = wc_get_product($variation_id);
-                    $order->add_product($product_obj, $quantity, array(
-                        'subtotal' => $product_obj->get_price() * $quantity,
-                        'total' => $product_obj->get_price() * $quantity
+                try {
+                    if ($variation_id > 0) {
+                        $product = wc_get_product($variation_id);
+                    } else {
+                        $product = wc_get_product($product_id);
+                    }
+
+                    if (!$product) {
+                        continue;
+                    }
+
+                    // Get the current price
+                    $price = $product->get_price();
+                    $subtotal = $price * $quantity;
+                    $total = $subtotal; // You can apply discounts here if needed
+
+                    // Add product to order
+                    $item_id = $order->add_product($product, $quantity, array(
+                        'subtotal' => $subtotal,
+                        'total' => $total,
+                        'variation_id' => $variation_id,
                     ));
-                } else {
-                    $product_obj = wc_get_product($product_id);
-                    $order->add_product($product_obj, $quantity, array(
-                        'subtotal' => $product_obj->get_price() * $quantity,
-                        'total' => $product_obj->get_price() * $quantity
-                    ));
+
+                    if (!$item_id) {
+                        throw new Exception(sprintf(__('Failed to add product %s to order.', 'rj-admin-order'), $product->get_name()));
+                    }
+
+                    $order_total += $total;
+                } catch (Exception $e) {
+                    error_log($e->getMessage());
+                    continue;
                 }
             }
         }
@@ -154,11 +178,15 @@ class RJ_Admin_Order_Form {
         $order->set_payment_method('cod');
         $order->set_payment_method_title('Cash on Delivery');
 
-        // Calculate totals
+        // Update totals
+        $order->set_total($order_total);
         $order->calculate_totals();
 
-        // Set order status
-        $order->update_status('processing', __('Order placed by admin.', 'rj-admin-order'));
+        // Add order note
+        $order->add_order_note(__('Order placed by admin through custom order form.', 'rj-admin-order'));
+
+        // Save the order
+        $order->save();
 
         return $order->get_id();
     }
