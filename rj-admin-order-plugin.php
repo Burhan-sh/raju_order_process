@@ -3,7 +3,7 @@
  * Plugin Name: RJ Admin Order Plugin
  * Description: Custom order processing plugin for administrators
  * Version: 1.0.0
- * Author: Your Name
+ * Author: Burhan Hasanfatta
  * Text Domain: rj-admin-order
  * Requires at least: 5.8
  * Requires PHP: 7.2
