@@ -1,7 +1,6 @@
 jQuery(document).ready(function($) {
     const productSearch = $('#rj-product-search');
     const selectedProducts = $('#rj-selected-products');
-    const orderItems = $('#rj-order-items');
     let searchTimeout;
     let searchResults;
 
@@ -21,7 +20,7 @@ jQuery(document).ready(function($) {
         clearTimeout(searchTimeout);
         
         if (query.length < 2) {
-            searchResults.hide();
+            searchResults && searchResults.hide();
             return;
         }
 
@@ -34,10 +33,16 @@ jQuery(document).ready(function($) {
                     term: query,
                     nonce: rj_admin_order_data.nonce
                 },
+                beforeSend: function() {
+                    productSearch.addClass('loading');
+                },
                 success: function(response) {
                     if (response.success && response.data.results) {
                         displaySearchResults(response.data.results);
                     }
+                },
+                complete: function() {
+                    productSearch.removeClass('loading');
                 }
             });
         }, 300);
@@ -48,15 +53,33 @@ jQuery(document).ready(function($) {
         initSearchResults();
         searchResults.empty();
 
-        results.forEach(function(product) {
-            const item = $('<div class="rj-search-item"></div>')
-                .text(product.text)
-                .data('product', product);
+        if (results.length === 0) {
+            searchResults.append('<div class="rj-no-results">No products found</div>');
+            searchResults.show();
+            return;
+        }
 
+        results.forEach(function(product) {
+            const item = $('<div class="rj-search-item"></div>');
+            
+            // Create product display with image if available
+            const productHtml = `
+                <div class="rj-search-item-content">
+                    ${product.image ? `<img src="${product.image}" alt="${product.text}" class="rj-product-image">` : ''}
+                    <div class="rj-product-details">
+                        <div class="rj-product-name">${product.text}</div>
+                        <div class="rj-product-price">₹${parseFloat(product.price).toFixed(2)}</div>
+                    </div>
+                </div>
+            `;
+            
+            item.html(productHtml).data('product', product);
+
+            // Handle click event
             item.on('click', function() {
                 const productData = $(this).data('product');
-                if (productData.has_variations) {
-                    loadVariations(productData);
+                if (productData.variations) {
+                    showVariationsModal(productData);
                 } else {
                     addProduct(productData);
                 }
@@ -70,31 +93,15 @@ jQuery(document).ready(function($) {
         searchResults.show();
     }
 
-    // Load product variations
-    function loadVariations(product) {
-        $.ajax({
-            url: rj_admin_order_data.ajax_url,
-            type: 'GET',
-            data: {
-                action: 'rj_get_variations',
-                product_id: product.id,
-                nonce: rj_admin_order_data.nonce
-            },
-            success: function(response) {
-                if (response.success && response.data.variations) {
-                    showVariationsModal(product, response.data.variations);
-                }
-            }
-        });
-    }
-
     // Show variations modal
-    function showVariationsModal(product, variations) {
+    function showVariationsModal(product) {
         const modal = $(`
             <div class="rj-variations-modal">
                 <div class="rj-variations-content">
-                    <span class="rj-variations-close">&times;</span>
-                    <h3>${product.text}</h3>
+                    <div class="rj-variations-header">
+                        <h3>${product.text}</h3>
+                        <span class="rj-variations-close">&times;</span>
+                    </div>
                     <div class="rj-variations-list"></div>
                 </div>
             </div>
@@ -102,20 +109,24 @@ jQuery(document).ready(function($) {
 
         const variationsList = modal.find('.rj-variations-list');
 
-        variations.forEach(function(variation) {
-            const variationItem = $('<div class="rj-variation-item"></div>')
-                .text(variation.text + ' - ₹' + variation.price)
-                .data('variation', variation)
-                .data('product', product);
+        product.variations.forEach(function(variation) {
+            const variationItem = $(`
+                <div class="rj-variation-item">
+                    ${variation.image ? `<img src="${variation.image}" alt="${variation.text}" class="rj-variation-image">` : ''}
+                    <div class="rj-variation-details">
+                        <div class="rj-variation-name">${variation.text}</div>
+                        <div class="rj-variation-price">₹${parseFloat(variation.price).toFixed(2)}</div>
+                    </div>
+                </div>
+            `);
 
             variationItem.on('click', function() {
-                const varData = $(this).data('variation');
-                const prodData = $(this).data('product');
                 addProduct({
-                    ...prodData,
-                    variation_id: varData.variation_id,
-                    price: varData.price,
-                    text: prodData.text + ' - ' + varData.text
+                    id: product.id,
+                    variation_id: variation.id,
+                    text: product.text + ' - ' + variation.text,
+                    price: variation.price,
+                    image: variation.image
                 });
                 modal.remove();
             });
@@ -145,12 +156,17 @@ jQuery(document).ready(function($) {
         const productItem = $(`
             <div id="product-${productId}" class="rj-product-item">
                 <div class="rj-product-info">
-                    <strong>${product.text}</strong>
-                    <div>₹${parseFloat(product.price).toFixed(2)}</div>
+                    ${product.image ? `<img src="${product.image}" alt="${product.text}" class="rj-product-thumbnail">` : ''}
+                    <div class="rj-product-details">
+                        <strong class="rj-product-name">${product.text}</strong>
+                        <div class="rj-product-price">₹${parseFloat(product.price).toFixed(2)}</div>
+                    </div>
                 </div>
                 <div class="rj-product-controls">
                     <input type="number" class="rj-quantity-input" value="1" min="1">
-                    <span class="rj-remove-product dashicons dashicons-trash"></span>
+                    <button type="button" class="rj-remove-product">
+                        <span class="dashicons dashicons-trash"></span>
+                    </button>
                 </div>
                 <input type="hidden" name="products[]" value='${JSON.stringify({
                     id: product.id,
@@ -174,8 +190,10 @@ jQuery(document).ready(function($) {
 
         // Remove product handler
         productItem.find('.rj-remove-product').on('click', function() {
-            productItem.remove();
-            updateOrderSummary();
+            productItem.fadeOut(300, function() {
+                $(this).remove();
+                updateOrderSummary();
+            });
         });
 
         selectedProducts.append(productItem);
@@ -199,14 +217,8 @@ jQuery(document).ready(function($) {
             subtotal += parseFloat(data.price) * parseInt(data.quantity);
         });
 
-        $('#rj-order-subtotal').text('₹' + subtotal.toFixed(2));
-        $('#rj-order-total').text('₹' + subtotal.toFixed(2));
+        $('#rj-order-subtotal, #rj-order-total').text('₹' + subtotal.toFixed(2));
     }
-
-    // Phone number validation
-    $('#phone').on('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
-    });
 
     // Close search results when clicking outside
     $(document).on('click', function(e) {
@@ -215,7 +227,7 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // Form submission handler
+    // Form validation
     $('.rj-admin-order-form').on('submit', function(e) {
         if (!selectedProducts.find('.rj-product-item').length) {
             e.preventDefault();
@@ -223,11 +235,17 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        const phone = $('#phone').val();
+        const phone = $('#phone').val().replace(/[^0-9]/g, '');
         if (phone.length !== 10) {
             e.preventDefault();
             alert('Please enter a valid 10-digit phone number.');
+            $('#phone').focus();
             return;
         }
+    });
+
+    // Phone number validation
+    $('#phone').on('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
     });
 }); 
