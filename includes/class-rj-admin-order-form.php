@@ -159,7 +159,7 @@ class RJ_Admin_Order_Form {
             'last_name'  => sanitize_text_field($data['lname']),
             'company'    => sanitize_text_field($data['company']),
             'address_1'  => sanitize_text_field($data['address_1']),
-            'address_2'  => sanitize_text_field($data['address_2']),
+            'landmark'   => sanitize_text_field($data['landmark']),
             'city'       => sanitize_text_field($data['city']),
             'state'      => sanitize_text_field($data['state']),
             'postcode'   => sanitize_text_field($data['postcode']),
@@ -173,6 +173,9 @@ class RJ_Admin_Order_Form {
 
         $order->set_address($address, 'billing');
         $order->set_address($address, 'shipping');
+
+        // Set custom landmark meta
+        $order->update_meta_data('_billing_landmark', sanitize_text_field($data['landmark']));
 
         // Set payment method
         $order->set_payment_method('cod');
