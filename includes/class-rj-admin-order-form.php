@@ -107,9 +107,17 @@ class RJ_Admin_Order_Form {
                 $quantity = isset($product['quantity']) ? absint($product['quantity']) : 1;
                 
                 if ($variation_id) {
-                    $order->add_product(wc_get_product($variation_id), $quantity);
+                    $product_obj = wc_get_product($variation_id);
+                    $order->add_product($product_obj, $quantity, array(
+                        'subtotal' => $product_obj->get_price() * $quantity,
+                        'total' => $product_obj->get_price() * $quantity
+                    ));
                 } else {
-                    $order->add_product(wc_get_product($product_id), $quantity);
+                    $product_obj = wc_get_product($product_id);
+                    $order->add_product($product_obj, $quantity, array(
+                        'subtotal' => $product_obj->get_price() * $quantity,
+                        'total' => $product_obj->get_price() * $quantity
+                    ));
                 }
             }
         }
