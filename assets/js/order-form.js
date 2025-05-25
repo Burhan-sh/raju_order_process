@@ -255,21 +255,35 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // Form validation
+    // Form submission handler
     $('.rj-admin-order-form').on('submit', function(e) {
-        if (!selectedProducts.find('.rj-product-item').length) {
-            e.preventDefault();
-            alert('Please select at least one product.');
-            return;
+        let isValid = true;
+        const errorMessages = [];
+
+        // Validate phone number
+        const phone = $('#phone').val().replace(/[^0-9]/g, '');
+        if (phone.length !== 10 || phone[0] === '0') {
+            isValid = false;
+            errorMessages.push('Phone number must be exactly 10 digits without any leading zeros or country code.');
         }
 
-        const phone = $('#phone').val().replace(/[^0-9]/g, '');
-        // Check if phone starts with 0 or has less/more than 10 digits
-        if (phone.length !== 10 || phone.startsWith('0')) {
+        // Validate landmark
+        const landmark = $('#landmark').val().trim();
+        if (!landmark) {
+            isValid = false;
+            errorMessages.push('Landmark / Area is required.');
+        }
+
+        // Validate products
+        if (!$('#rj-selected-products .product-item').length) {
+            isValid = false;
+            errorMessages.push('Please select at least one product.');
+        }
+
+        if (!isValid) {
             e.preventDefault();
-            alert('Please enter a valid 10-digit phone number without any leading zeros or country code.');
-            $('#phone').focus();
-            return;
+            alert(errorMessages.join('\n'));
+            return false;
         }
     });
 

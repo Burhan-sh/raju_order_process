@@ -62,6 +62,7 @@ class RJ_Admin_Order_Form {
             'lname' => __('Last Name', 'rj-admin-order'),
             'phone' => __('Phone Number', 'rj-admin-order'),
             'address_1' => __('Street Address', 'rj-admin-order'),
+            'landmark' => __('Landmark / Area', 'rj-admin-order'),
             'city' => __('City', 'rj-admin-order'),
             'state' => __('State', 'rj-admin-order'),
             'postcode' => __('Postcode', 'rj-admin-order'),

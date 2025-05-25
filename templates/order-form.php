@@ -101,8 +101,8 @@ $rj_admin_order_form = RJ_Admin_Order::get_instance()->get_form();
                             <input type="text" name="address_1" id="address_1" required>
                         </div>
                         <div class="rj-admin-order-col">
-                            <label for="landmark"><?php _e('Landmark / Area', 'rj-admin-order'); ?></label>
-                            <input type="text" name="landmark" id="landmark">
+                            <label for="landmark"><?php _e('Landmark / Area', 'rj-admin-order'); ?> *</label>
+                            <input type="text" name="landmark" id="landmark" required>
                         </div>
                     </div>
 
