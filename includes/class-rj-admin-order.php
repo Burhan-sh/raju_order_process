@@ -1,10 +1,12 @@
 <?php
 class RJ_Admin_Order {
     private $version;
+    private $form;
 
     public function __construct() {
         $this->version = RJ_ADMIN_ORDER_VERSION;
         $this->load_dependencies();
+        $this->form = new RJ_Admin_Order_Form();
     }
 
     private function load_dependencies() {
@@ -16,7 +18,6 @@ class RJ_Admin_Order {
     public function init() {
         // Initialize components
         $this->init_hooks();
-        new RJ_Admin_Order_Form();
         new RJ_Admin_Order_Ajax();
     }
 
@@ -32,7 +33,7 @@ class RJ_Admin_Order {
     }
 
     public function enqueue_scripts() {
-        if (is_page('order-process-admin')) {
+        if (is_page('order-process-admin') || has_shortcode(get_post()->post_content, 'raju_order_process')) {
             // Enqueue CSS
             wp_enqueue_style(
                 'rj-admin-order-style',
@@ -84,6 +85,9 @@ class RJ_Admin_Order {
             return __('You do not have permission to access this page.', 'rj-admin-order');
         }
 
+        // Make the form instance available to the template
+        $rj_admin_order_form = $this->form;
+        
         ob_start();
         include RJ_ADMIN_ORDER_PLUGIN_DIR . 'templates/order-form.php';
         return ob_get_clean();
