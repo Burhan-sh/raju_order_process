@@ -275,10 +275,16 @@ jQuery(document).ready(function($) {
         }
 
         // Validate products
-        if (!$('#rj-selected-products .product-item').length) {
+        const selectedProductsCount = $('#rj-selected-products .rj-product-item').length;
+        if (selectedProductsCount === 0) {
             isValid = false;
             errorMessages.push('Please select at least one product.');
         }
+
+        // Log validation state for debugging
+        console.log('Selected products count:', selectedProductsCount);
+        console.log('Products validation passed:', selectedProductsCount > 0);
+        console.log('Form is valid:', isValid);
 
         if (!isValid) {
             e.preventDefault();
