@@ -2,7 +2,7 @@
 /**
  * Plugin Name: RJ Admin Order Plugin
  * Description: Custom order processing plugin for administrators
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Burhan Hasanfatta
  * Text Domain: rj-admin-order
  * Requires at least: 5.8
@@ -15,6 +15,15 @@
 if (!defined('WPINC')) {
     die;
 }
+
+/**
+ * Declare HPOS (High-Performance Order Storage) compatibility
+ */
+add_action( 'before_woocommerce_init', function() {
+    if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+    }
+} );
 
 // Define plugin constants
 define('RJ_ADMIN_ORDER_VERSION', '1.0.0');
